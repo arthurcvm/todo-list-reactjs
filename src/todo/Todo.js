@@ -17,6 +17,7 @@ class Todo extends Component {
     this.handleRemove = this.handleRemove.bind(this);
     this.handleMarkAsDone = this.handleMarkAsDone.bind(this);
     this.handleMarkAsPending = this.handleMarkAsPending.bind(this);
+    this.handleSearch = this.handleSearch.bind(this);
 
     this.refresh();
   }
@@ -29,6 +30,7 @@ class Todo extends Component {
           description={this.state.description}
           handleChange={this.handleChange}
           handleAdd={this.handleAdd}
+          handleSearch={this.handleSearch}
         />
         <TodoList
           list={this.state.list}
@@ -49,28 +51,33 @@ class Todo extends Component {
     this.setState({ ...this.state, description: e.target.value });
   }
 
-  refresh() {
+  refresh(description = '') {
+      const search = description ? `&description__regex=/${description}/` : ''
     api
-      .get(`?sort=-createdAt`)
+      .get(`?sort=-createdAt${search}`)
       .then((resp) =>
-        this.setState({ ...this.state, description: "", list: resp.data })
+        this.setState({ ...this.state, description, list: resp.data })
       );
   }
 
   handleRemove(todo) {
-    api.delete(`${todo._id}`).then((resp) => this.refresh());
+    api.delete(`${todo._id}`).then((resp) => this.refresh(this.state.description));
   }
 
   handleMarkAsDone(todo) {
     api
       .put(`${todo._id}`, { ...todo, done: true })
-      .then((resp) => this.refresh());
+      .then((resp) => this.refresh(this.state.description));
   }
 
   handleMarkAsPending(todo) {
     api
-    .put(`${todo._id}`, { ...todo, done: false })
-    .then((resp) => this.refresh());
+      .put(`${todo._id}`, { ...todo, done: false })
+      .then((resp) => this.refresh(this.state.description));
+  }
+
+  handleSearch() {
+      this.refresh(this.state.description)
   }
 }
 
