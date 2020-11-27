@@ -14,6 +14,9 @@ class Todo extends Component {
 
     this.handleAdd = this.handleAdd.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.handleRemove = this.handleRemove.bind(this);
+
+    this.refresh();
   }
 
   render() {
@@ -25,19 +28,30 @@ class Todo extends Component {
           handleChange={this.handleChange}
           handleAdd={this.handleAdd}
         />
-        <TodoList />
+        <TodoList list={this.state.list} handleRemove={this.handleRemove} />
       </div>
     );
   }
 
   handleAdd() {
     const description = this.state.description;
-    api.post("todos", { description })
-      .then((resp) => console.log("Funcionou!"));
+    api.post("", { description }).then((resp) => this.refresh());
   }
 
   handleChange(e) {
     this.setState({ ...this.state, description: e.target.value });
+  }
+
+  refresh() {
+    api
+      .get(`?sort=-createdAt`)
+      .then((resp) =>
+        this.setState({ ...this.state, description: "", list: resp.data })
+      );
+  }
+
+  handleRemove(todo) {
+    api.delete(`${todo._id}`).then((resp) => this.refresh());
   }
 }
 
